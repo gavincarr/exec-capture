@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+#
+# Utility to execute a command and capture its output to a given directory
+#
+
+use strict;
+use warnings;
+use File::Basename;
+use Getopt::Long qw(:config no_ignore_case bundling);
+use File::SearchPath qw(searchpath);
+use IPC::Run3;
+
+sub usage {
+  warn @_ if @_;
+  die "usage: " . basename($0) . " [-v] [-n] [-m] --dir <dir> <name> [<cmd> [<args>]]\n";
+}
+
+$|++;
+
+my $verbose = 0;
+my ($help, $noop, $directory, $missing_ok, $stderr);
+usage unless GetOptions(
+  'help|h|?'        => \$help,
+  'verbose|v+'      => \$verbose,
+  'noop|n'          => \$noop,
+  'dir|d=s'         => \$directory,
+  'missing-ok|m'    => \$missing_ok,
+  'stderr|e'        => \$stderr,
+);
+usage if $help;
+usage unless @ARGV;
+$verbose ||= 1 if $noop;
+
+my $name = shift(@ARGV);
+my $cmd  = shift(@ARGV) || $name;
+my @args = @ARGV;
+printv(name => $name);
+printv(cmd  => $cmd);
+
+# Allow directory to be set via environment, for use with cron
+$directory ||= $ENV{EXEC_CAPTURE_DIR}
+  or usage "Missing --dir argument (or set via EXEC_CAPTURE_DIR environment variable)\n";
+printv(directory => $directory);
+
+unless ($noop) {
+  -d $directory
+    or mkdir $directory
+      or die "mkdir on $directory failed: $!";
+}
+
+my $full_cmd = searchpath($cmd, env => 'PATH', exe => 1);
+if (! $full_cmd) {
+  exit 0 if $missing_ok;
+  die "Cannot find '$cmd' in path (or add --missing-ok to avoid this error)\n";
+}
+printv(full_cmd => $full_cmd);
+
+my $full_cmd_plus_args = join(' ', $full_cmd, @args);
+if ($noop) {
+  print "$full_cmd_plus_args\n";
+}
+else {
+  printv(full_cmd_plus_args => $full_cmd_plus_args);
+
+  my $outfile = File::Spec->catfile($directory, $name);
+  open my $outfh, '>', $outfile
+    or die "Cannot open '$outfile' for output: $!";
+
+  my $output;
+  if ($stderr) {
+    run3 [ $cmd, @args ], undef, \$output, \$output;
+  }
+  else {
+    run3 [ $cmd, @args ], undef, \$output, \undef;
+  }
+
+  print $outfh $output
+    or die "Writing $cmd output to $outfile failed: $!";
+
+  close $outfh;
+}
+
+
+sub printv {
+  my ($name, $value) = @_;
+  print STDERR "+ $name: $value\n" if $verbose;
+}
+
