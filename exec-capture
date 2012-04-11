@@ -12,7 +12,7 @@ use IPC::Run3;
 
 sub usage {
   warn @_ if @_;
-  die "usage: " . basename($0) . " [-v] [-n] [-m] --dir <dir> <name> [<cmd> [<args>]]\n";
+  die "usage: " . basename($0) . " [-v] [-n] [--missing-ok] [--sort] --dir <dir> <name> [<cmd> [<args>]]\n";
 }
 
 $|++;
