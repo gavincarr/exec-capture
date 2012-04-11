@@ -6,7 +6,7 @@
 use strict;
 use warnings;
 use File::Basename;
-use Getopt::Long qw(:config no_ignore_case bundling);
+use Getopt::Long qw(:config no_ignore_case bundling require_order);
 use File::SearchPath qw(searchpath);
 use IPC::Run3;
 
@@ -18,7 +18,7 @@ sub usage {
 $|++;
 
 my $verbose = 0;
-my ($help, $noop, $directory, $missing_ok, $stderr);
+my ($help, $noop, $directory, $missing_ok, $stderr, $sort);
 usage unless GetOptions(
   'help|h|?'        => \$help,
   'verbose|v+'      => \$verbose,
@@ -26,14 +26,21 @@ usage unless GetOptions(
   'dir|d=s'         => \$directory,
   'missing-ok|m'    => \$missing_ok,
   'stderr|e'        => \$stderr,
+  'sort|s'          => \$sort,
 );
 usage if $help;
 usage unless @ARGV;
 $verbose ||= 1 if $noop;
 
-my $name = shift(@ARGV);
-my $cmd  = shift(@ARGV) || $name;
-my @args = @ARGV;
+my $name = shift @ARGV;
+my ($cmd, @args);
+if ($cmd = shift @ARGV) {
+  ($cmd, @args) = split /\s+/, $cmd;
+}
+else {
+  $cmd = $name;
+}
+push @args, @ARGV;
 printv(name => $name);
 printv(cmd  => $cmd);
 
@@ -72,6 +79,11 @@ else {
   }
   else {
     run3 [ $cmd, @args ], undef, \$output, \undef;
+  }
+
+  if ($sort) {
+    chomp $output;
+    $output = join("\n", sort split "\n", $output) . "\n";
   }
 
   print $outfh $output
