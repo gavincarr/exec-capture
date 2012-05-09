@@ -45,11 +45,11 @@ printv(name => $name);
 printv(cmd  => $cmd);
 
 # Allow directory to be set via environment, for use with cron
-$directory ||= $ENV{EXEC_CAPTURE_DIR}
-  or usage "Missing --dir argument (or set via EXEC_CAPTURE_DIR environment variable)\n";
-printv(directory => $directory);
-
 unless ($noop) {
+  $directory ||= $ENV{EXEC_CAPTURE_DIR}
+    or usage "Missing --dir argument (or set via EXEC_CAPTURE_DIR environment variable)\n";
+  printv(directory => $directory);
+
   -d $directory
     or mkdir $directory
       or die "mkdir on $directory failed: $!";
@@ -63,28 +63,29 @@ if (! $full_cmd) {
 printv(full_cmd => $full_cmd);
 
 my $full_cmd_plus_args = join(' ', $full_cmd, @args);
-if ($noop) {
-  print "$full_cmd_plus_args\n";
+printv(full_cmd_plus_args => $full_cmd_plus_args);
+
+my $output;
+if ($stderr) {
+  run3 [ $cmd, @args ], undef, \$output, \$output;
 }
 else {
-  printv(full_cmd_plus_args => $full_cmd_plus_args);
+  run3 [ $cmd, @args ], undef, \$output, \undef;
+}
 
+if ($sort) {
+  chomp $output;
+  $output = join("\n", sort split "\n", $output) . "\n";
+}
+
+if ($noop) {
+  print $output;
+}
+
+else {
   my $outfile = File::Spec->catfile($directory, $name);
   open my $outfh, '>', $outfile
     or die "Cannot open '$outfile' for output: $!";
-
-  my $output;
-  if ($stderr) {
-    run3 [ $cmd, @args ], undef, \$output, \$output;
-  }
-  else {
-    run3 [ $cmd, @args ], undef, \$output, \undef;
-  }
-
-  if ($sort) {
-    chomp $output;
-    $output = join("\n", sort split "\n", $output) . "\n";
-  }
 
   print $outfh $output
     or die "Writing $cmd output to $outfile failed: $!";
