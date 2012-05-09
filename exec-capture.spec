@@ -1,7 +1,7 @@
 
 Name:           exec-capture
 Summary:        Utility to execute a command and capture its output to a given directory
-Version:        0.2
+Version:        0.3
 Release:        1%{?org_tag}%{dist}
 Source0:        %{name}-%{version}.tar.gz
 License:        GPL
@@ -14,6 +14,7 @@ BuildRequires:  perl(File::SearchPath)
 BuildRequires:  perl(IPC::Run3)
 BuildRequires:  perl(Test::Files)
 BuildRequires:  perl(Test::More) >= 0.88
+BuildRequires:  /usr/bin/pod2man
 Requires:       perl(File::SearchPath)
 Requires:       perl(IPC::Run3)
 
@@ -30,8 +31,11 @@ executables and standard output directories slightly more gracefully.
 
 %install
 mkdir -p %{buildroot}%{_bindir} 
+mkdir -p %{buildroot}%{_mandir}/man1
   
 install -m0755 %{name} %{buildroot}%{_bindir}
+
+pod2man %{name} > %{buildroot}%{_mandir}/man1/%{name}.1
 
 %clean
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
@@ -39,8 +43,13 @@ install -m0755 %{name} %{buildroot}%{_bindir}
 %files
 %defattr(-,root,root)
 %{_bindir}/*
+%{_mandir}/man1/*
 
 %changelog
+* Wed May 09 2012 Gavin Carr <gavin@openfusion.com.au> 0.3-1
+- Add --sub support, and change name to be --name|-N option.
+- Add some initial perldocs.
+
 * Wed Apr 11 2012 Gavin Carr <gavin@openfusion.com.au> 0.2-1
 - Add support for quoted commands, commands with options, and --sort.
 
