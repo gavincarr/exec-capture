@@ -1,4 +1,5 @@
 .*.sw?
 *~
 TODO
+t/t01
 t/t02/*.out
