@@ -1,0 +1,53 @@
+Found a zcard at /dev/zcard0.
+Firmware type: znic
+Firmware version: 11
+Zcard version: 17
+Hardware temperature: xxx C
+Port 0: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF1321P1BTL   
+   SFP rev:    A   
+   Wavelength: 1310 nm
+   Rx power:   xxx dBm
+Port 1: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF1321P1BTL   
+   SFP rev:    A   
+   Wavelength: 1310 nm
+   Rx power:   xxx dBm
+Port 2: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF1321P1BTL   
+   SFP rev:    A   
+   Wavelength: 1310 nm
+   Rx power:   xxx dBm
+Port 3: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF8519P2BNL   
+   SFP rev:    A   
+   Wavelength: 850 nm
+   Rx power:   xxx dBm
+
+Found a zcard at /dev/zcard1.
+Firmware type: Z1 Tap Firmware (zpass)
+Firmware version: 24
+Zcard version: 17
+Hardware temperature: xxx C
+Port 0: empty
+Port 1: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF8519P2BNL   
+   SFP rev:    A   
+   Wavelength: 850 nm
+   Rx power:   xxx dBm
+Port 2: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FTLF8519P2BNL   
+   SFP rev:    A   
+   Wavelength: 850 nm
+   Rx power:   xxx dBm
+Port 3: up
+   SFP vendor: FINISAR CORP.   
+   SFP part:   FCLF-8520-3     
+   SFP rev:    A   
+
