@@ -18,7 +18,7 @@ sub usage {
 $|++;
 
 my $verbose = 0;
-my ($help, $noop, $directory, $missing_ok, $stderr, $sort);
+my ($help, $noop, $directory, $missing_ok, $stderr, $sort, @sub);
 usage unless GetOptions(
   'help|h|?'        => \$help,
   'verbose|v+'      => \$verbose,
@@ -27,6 +27,7 @@ usage unless GetOptions(
   'missing-ok|m'    => \$missing_ok,
   'stderr|e'        => \$stderr,
   'sort|s'          => \$sort,
+  'sub=s'           => \@sub,
 );
 usage if $help;
 usage unless @ARGV;
@@ -78,8 +79,10 @@ if ($sort) {
   $output = join("\n", sort split "\n", $output) . "\n";
 }
 
+$output = munge_output($output, @sub) if @sub;
+
 if ($noop) {
-  print $output;
+  print "\n$output";
 }
 
 else {
@@ -99,3 +102,11 @@ sub printv {
   print STDERR "+ $name: $value\n" if $verbose;
 }
 
+# Apply specified substitutions to output
+sub munge_output {
+  my ($output, @sub) = @_;
+  for my $sub (@sub) {
+    eval "\$output =~ $sub";
+  }
+  return $output;
+}
