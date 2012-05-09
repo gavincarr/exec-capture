@@ -12,17 +12,18 @@ use IPC::Run3;
 
 sub usage {
   warn @_ if @_;
-  die "usage: " . basename($0) . " [-v] [-n] [--missing-ok] [--sort] --dir <dir> <name> [<cmd> [<args>]]\n";
+  die "usage: " . basename($0) . " [-v] [-n] [--missing-ok] [--sort] [--sub <subst>] --dir <dir> [-N <name>] <cmd> [<args>]\n";
 }
 
 $|++;
 
 my $verbose = 0;
-my ($help, $noop, $directory, $missing_ok, $stderr, $sort, @sub);
+my ($help, $noop, $name, $directory, $missing_ok, $stderr, $sort, @sub);
 usage unless GetOptions(
   'help|h|?'        => \$help,
   'verbose|v+'      => \$verbose,
   'noop|n'          => \$noop,
+  'name|N=s'        => \$name,
   'dir|d=s'         => \$directory,
   'missing-ok|m'    => \$missing_ok,
   'stderr|e'        => \$stderr,
@@ -33,17 +34,12 @@ usage if $help;
 usage unless @ARGV;
 $verbose ||= 1 if $noop;
 
-my $name = shift @ARGV;
-my ($cmd, @args);
-if ($cmd = shift @ARGV) {
-  ($cmd, @args) = split /\s+/, $cmd;
-}
-else {
-  $cmd = $name;
-}
-push @args, @ARGV;
-printv(name => $name);
+my $cmd = shift @ARGV;
+my @args = @ARGV;
+$name ||= $cmd;
 printv(cmd  => $cmd);
+printv(args => join(' ', @args));
+printv(name => $name);
 
 # Allow directory to be set via environment, for use with cron
 unless ($noop) {
@@ -110,3 +106,104 @@ sub munge_output {
   }
   return $output;
 }
+
+__END__
+
+=head1 NAME
+
+exec-capture - utility to execute a command and capture its output to a
+given directory
+
+=head1 SYNOPSIS
+
+  # usage: exec-capture [options] cmd [args]
+  exec-capture ifconfig
+  exec-capture -N ip_route ip route
+
+=head1 DESCRIPTION
+
+exec-capture is a simple wrapper utility to search the user's path for 
+an arbitrary command, execute it, and capture its output to a given
+directory.
+
+It is intended particularly for use from cron, to run a command
+periodically and capture its output for aggregation or analysis.
+
+=head2 OPTIONS
+
+The following options are supported:
+
+=over 4
+
+=item --help | -h | -?
+
+Show usage information.
+
+=item --verbose | -v
+
+Run with more verbose output (may be repeated).
+
+=item --noop | -n
+
+Report command output to stdout instead of saving to the capture directory.
+Implies --verbose.
+
+=item --name | -N <name>
+
+Name of the file to be used for capture output in the capture directory.
+Defaults to the command name, so should normally be specified explicitly
+whenever you're going to run the same command more than once with different
+arguments e.g.
+
+    exec-capture -N ip_address ip address
+    exec-capture -N ip_route   ip route
+
+=item --dir | -d <directory>
+
+Required. The directory to be used to capture output. May also be specified
+via an EXEC_CAPTURE_DIR environment variable, so that it can be set at the
+top of a cron job for multiple exec-capture invocations. Default: none.
+
+=item --missing-ok | -m
+
+Flag to indicate that it is okay for the given command to be missing. If the
+command is not found in the user's path we just quietly exit instead of
+raising an error. This allows for cron jobs to include optional exec-capture
+entries that gracefully exit on hosts where the commands are not found.
+
+=item --stderr | -e
+
+Also capture stderr output, instead of just stdout.
+
+=item --sort | -s
+
+Sort output lines before capturing.
+
+=item --sub <substitution>
+
+Apply (multiple) perl substitutions to command output before capturing.
+This is useful, for instance, where you have rapidly-changing data included 
+in your output (e.g. temperatures, traffic statistics, etc.) that you don't
+want to capture, particularly if your tracking changes via a version control
+system. e.g.
+
+    # remove RX and TX counter lines from ifconfig output
+    exec-capture --sub 's/^\s+(RX|TX).*\n//gm' ifconfig
+
+May be repeated.
+
+=back
+
+=head1 AUTHOR
+
+Gavin Carr <gavin@openfusion.com.au>
+
+=head1 COPYRIGHT AND LICENCE
+
+Copyright (C) Gavin Carr 2011-2012.
+
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself, either Perl version 5.8.0 or, at
+your option, any later version of Perl 5.
+
+=cut
