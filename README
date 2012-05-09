@@ -1,0 +1,81 @@
+NAME
+    exec-capture - utility to execute a command and capture its output to a
+    given directory
+
+SYNOPSIS
+      # usage: exec-capture [options] cmd [args]
+      exec-capture ifconfig
+      exec-capture -N ip_route ip route
+
+DESCRIPTION
+    exec-capture is a simple wrapper utility to search the user's path for
+    an arbitrary command, execute it, and capture its output to a given
+    directory.
+
+    It is intended particularly for use from cron, to run a command
+    periodically and capture its output for aggregation or analysis.
+
+  OPTIONS
+    The following options are supported:
+
+    --help | -h | -?
+        Show usage information.
+
+    --verbose | -v
+        Run with more verbose output (may be repeated).
+
+    --noop | -n
+        Report command output to stdout instead of saving to the capture
+        directory. Implies --verbose.
+
+    --name | -N <name>
+        Name of the file to be used for capture output in the capture
+        directory. Defaults to the command name, so should normally be
+        specified explicitly whenever you're going to run the same command
+        more than once with different arguments e.g.
+
+            exec-capture -N ip_address ip address
+            exec-capture -N ip_route   ip route
+
+    --dir | -d <directory>
+        Required. The directory to be used to capture output. May also be
+        specified via an EXEC_CAPTURE_DIR environment variable, so that it
+        can be set at the top of a cron job for multiple exec-capture
+        invocations. Default: none.
+
+    --missing-ok | -m
+        Flag to indicate that it is okay for the given command to be
+        missing. If the command is not found in the user's path we just
+        quietly exit instead of raising an error. This allows for cron jobs
+        to include optional exec-capture entries that gracefully exit on
+        hosts where the commands are not found.
+
+    --stderr | -e
+        Also capture stderr output, instead of just stdout.
+
+    --sort | -s
+        Sort output lines before capturing.
+
+    --sub <substitution>
+        Apply (multiple) perl substitutions to command output before
+        capturing. This is useful, for instance, where you have
+        rapidly-changing data included in your output (e.g. temperatures,
+        traffic statistics, etc.) that you don't want to capture,
+        particularly if your tracking changes via a version control system.
+        e.g.
+
+            # remove RX and TX counter lines from ifconfig output
+            exec-capture --sub 's/^\s+(RX|TX).*\n//gm' ifconfig
+
+        May be repeated.
+
+AUTHOR
+    Gavin Carr <gavin@openfusion.com.au>
+
+COPYRIGHT AND LICENCE
+    Copyright (C) Gavin Carr 2011-2012.
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself, either Perl version 5.8.0 or, at
+    your option, any later version of Perl 5.
+
