@@ -1,7 +1,7 @@
 
 Name:           exec-capture
 Summary:        Utility to execute a command and capture its output to a given directory
-Version:        0.3
+Version:        0.4
 Release:        1%{?org_tag}%{dist}
 Source0:        %{name}-%{version}.tar.gz
 License:        GPL
@@ -11,12 +11,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-buildroot
 BuildArch:      noarch
 BuildRequires:  perl(File::Path) >= 2.0
 BuildRequires:  perl(File::SearchPath)
-BuildRequires:  perl(IPC::Run3)
 BuildRequires:  perl(Test::Files)
 BuildRequires:  perl(Test::More) >= 0.88
 BuildRequires:  /usr/bin/pod2man
 Requires:       perl(File::SearchPath)
-Requires:       perl(IPC::Run3)
 
 %description
 A simple utility to execute a command and capture its output to a named file in
@@ -46,6 +44,9 @@ pod2man %{name} > %{buildroot}%{_mandir}/man1/%{name}.1
 %{_mandir}/man1/*
 
 %changelog
+* Tue May 22 2012 Gavin Carr <gavin@openfusion.com.au> 0.4-1
+- Change from IPC::Run3 to qx() execution, to allow pipes etc.
+
 * Wed May 09 2012 Gavin Carr <gavin@openfusion.com.au> 0.3-1
 - Add --sub support, and change name to be --name|-N option.
 - Add some initial perldocs.
