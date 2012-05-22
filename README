@@ -28,14 +28,25 @@ DESCRIPTION
         Report command output to stdout instead of saving to the capture
         directory. Implies --verbose.
 
+    --cmd | -C <cmd_path>
+        Command to check for existence before execution. Defaults to the
+        first argument in @ARGV (i.e. the 'cmd' arg), so mostly only useful
+        if you're running a complex (e.g. piped) command line where you want
+        to test something other than the first cmd argument.
+
     --name | -N <name>
         Name of the file to be used for capture output in the capture
-        directory. Defaults to the command name, so should normally be
+        directory. Defaults to the (basenamed) command name (from --cmd, if
+        given, else the first argument in ARGV), so should normally be
         specified explicitly whenever you're going to run the same command
-        more than once with different arguments e.g.
+        more than once with different arguments, or where you've got a more
+        complex (e.g. piped) command line where the first argument isn't the
+        most important e.g.
 
             exec-capture -N ip_address ip address
             exec-capture -N ip_route   ip route
+
+            exec-capture -N blargle 'ls *.txt | blargle'
 
     --dir | -d <directory>
         Required. The directory to be used to capture output. May also be
