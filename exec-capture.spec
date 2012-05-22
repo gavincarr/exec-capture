@@ -46,6 +46,8 @@ pod2man %{name} > %{buildroot}%{_mandir}/man1/%{name}.1
 %changelog
 * Tue May 22 2012 Gavin Carr <gavin@openfusion.com.au> 0.4-1
 - Change from IPC::Run3 to qx() execution, to allow pipes etc.
+- Add a --cmd|-C option to allow key command to be made explicit
+  (for path searching and/or output file naming).
 
 * Wed May 09 2012 Gavin Carr <gavin@openfusion.com.au> 0.3-1
 - Add --sub support, and change name to be --name|-N option.
