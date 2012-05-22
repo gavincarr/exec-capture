@@ -7,23 +7,25 @@ use strict;
 use warnings;
 use File::Basename;
 use Getopt::Long qw(:config no_ignore_case bundling require_order);
+use File::Spec;
 use File::SearchPath qw(searchpath);
 
 sub usage {
   warn @_ if @_;
-  die "usage: " . basename($0) . " [-v] [-n] [--missing-ok] [--sort] [--sub <subst>] --dir <dir> [-N <name>] <cmd> [<args>]\n";
+  die "usage: " . basename($0) . " [-v] [-n] [--cmd <cmd>] [--missing-ok] [--sort] [--sub <subst>] --dir <dir> [-N <name>] <cmd> [<args>]\n";
 }
 
 $|++;
 
 my $verbose = 0;
-my ($help, $noop, $name, $directory, $missing_ok, $stderr, $sort, @sub);
+my ($help, $noop, $name, $directory, $cmd, $missing_ok, $stderr, $sort, @sub);
 usage unless GetOptions(
   'help|h|?'        => \$help,
   'verbose|v+'      => \$verbose,
   'noop|n'          => \$noop,
   'name|N=s'        => \$name,
   'dir|d=s'         => \$directory,
+  'cmd|C=s'         => \$cmd,
   'missing-ok|m'    => \$missing_ok,
   'stderr|e'        => \$stderr,
   'sort|s'          => \$sort,
@@ -33,12 +35,13 @@ usage if $help;
 usage unless @ARGV;
 $verbose ||= 1 if $noop;
 
-my $cmd = shift @ARGV;
-my @args = @ARGV;
-($cmd, @args) = split /\s+/, $cmd if $cmd and @args == 0;
-$name ||= $cmd;
-printv(cmd  => $cmd);
-printv(args => join(' ', @args));
+my @cmd = @ARGV;
+@cmd = split /\s+/, $cmd[0] if @cmd == 1;
+my $cmd_string = join ' ', @cmd;
+$cmd  ||= $cmd[0];
+$name ||= basename $cmd;
+printv(cmd_string => $cmd_string);
+printv(cmd => $cmd);
 printv(name => $name);
 
 # Allow directory to be set via environment, for use with cron
@@ -52,30 +55,37 @@ unless ($noop) {
       or die "mkdir on $directory failed: $!";
 }
 
-my $full_cmd = searchpath($cmd, env => 'PATH', exe => 1);
+# Search for $cmd in path, and fail if not found (unless $missing_ok)
+my $full_cmd;
+if (File::Spec->file_name_is_absolute($cmd)) {
+  $full_cmd = $cmd if -x $cmd;
+}
+else {
+  $full_cmd = searchpath($cmd, env => 'PATH', exe => 1);
+}
 if (! $full_cmd) {
   exit 0 if $missing_ok;
   die "Cannot find '$cmd' in path (or add --missing-ok to avoid this error)\n";
 }
 printv(full_cmd => $full_cmd);
 
-my $full_cmd_plus_args = join(' ', $full_cmd, @args);
-$full_cmd_plus_args .= ' 2>&1' if $stderr;
-printv(full_cmd_plus_args => $full_cmd_plus_args);
+# Execute $cmd_string
+my $output = qx($cmd_string);
 
-my $output = qx($full_cmd_plus_args);
-
+# Sort if required
 if ($sort) {
   chomp $output;
   $output = join("\n", sort split "\n", $output) . "\n";
 }
 
+# Munge output if required
 $output = munge_output($output, @sub) if @sub;
 
 if ($noop) {
   print "\n$output";
 }
 
+# Save output to $dir
 else {
   my $outfile = File::Spec->catfile($directory, $name);
   open my $outfh, '>', $outfile
@@ -88,6 +98,7 @@ else {
 }
 
 
+# Verbose print
 sub printv {
   my ($name, $value) = @_;
   print STDERR "+ $name: $value\n" if $verbose;
@@ -143,15 +154,26 @@ Run with more verbose output (may be repeated).
 Report command output to stdout instead of saving to the capture directory.
 Implies --verbose.
 
+=item --cmd | -C <cmd_path>
+
+Command to check for existence before execution. Defaults to the first
+argument in @ARGV (i.e. the 'cmd' arg), so mostly only useful if you're
+running a complex (e.g. piped) command line where you want to test
+something other than the first cmd argument.
+
 =item --name | -N <name>
 
 Name of the file to be used for capture output in the capture directory.
-Defaults to the command name, so should normally be specified explicitly
-whenever you're going to run the same command more than once with different
-arguments e.g.
+Defaults to the (basenamed) command name (from --cmd, if given, else the
+first argument in ARGV), so should normally be specified explicitly
+whenever you're going to run the same command more than once with
+different arguments, or where you've got a more complex (e.g. piped)
+command line where the first argument isn't the most important e.g.
 
     exec-capture -N ip_address ip address
     exec-capture -N ip_route   ip route
+
+    exec-capture -N blargle 'ls *.txt | blargle'
 
 =item --dir | -d <directory>
 
