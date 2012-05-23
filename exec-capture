@@ -38,6 +38,7 @@ $verbose ||= 1 if $noop;
 my @cmd = @ARGV;
 @cmd = split /\s+/, $cmd[0] if @cmd == 1;
 my $cmd_string = join ' ', @cmd;
+$cmd_string .= $stderr ? ' 2>&1' : ' 2>/dev/null';
 $cmd  ||= $cmd[0];
 $name ||= basename $cmd;
 printv(cmd_string => $cmd_string);
@@ -190,7 +191,8 @@ entries that gracefully exit on hosts where the commands are not found.
 
 =item --stderr | -e
 
-Also capture stderr output, instead of just stdout.
+Also capture stderr output, instead of just stdout. If B<not> set, stderr
+output is discarded.
 
 =item --sort | -s
 
