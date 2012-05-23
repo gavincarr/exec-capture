@@ -1,7 +1,7 @@
 
 Name:           exec-capture
 Summary:        Utility to execute a command and capture its output to a given directory
-Version:        0.4
+Version:        0.4.1
 Release:        1%{?org_tag}%{dist}
 Source0:        %{name}-%{version}.tar.gz
 License:        GPL
@@ -44,6 +44,9 @@ pod2man %{name} > %{buildroot}%{_mandir}/man1/%{name}.1
 %{_mandir}/man1/*
 
 %changelog
+* Wed May 23 2012 Gavin Carr <gavin@openfusion.com.au> 0.4.1-1
+- Re-add missing stderr handling.
+
 * Tue May 22 2012 Gavin Carr <gavin@openfusion.com.au> 0.4-1
 - Change from IPC::Run3 to qx() execution, to allow pipes etc.
 - Add a --cmd|-C option to allow key command to be made explicit
